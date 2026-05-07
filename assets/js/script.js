@@ -1,4 +1,31 @@
 $(function() {
+    // Compatibility shim for markdown that renders {:target="_blank"} as literal text.
+    var blankTargetMarker = /\{:\s*target\s*=\s*"_blank"\s*\}/;
+    $('article a').each(function() {
+        var nextNode = this.nextSibling;
+        if (!nextNode || nextNode.nodeType !== Node.TEXT_NODE) {
+            return;
+        }
+
+        var nextText = nextNode.nodeValue || '';
+        if (!blankTargetMarker.test(nextText)) {
+            return;
+        }
+
+        $(this).attr('target', '_blank');
+
+        var rel = ($(this).attr('rel') || '').trim();
+        if (!/\bnoopener\b/.test(rel)) {
+            rel = (rel ? rel + ' ' : '') + 'noopener';
+        }
+        if (!/\bnoreferrer\b/.test(rel)) {
+            rel = rel + ' noreferrer';
+        }
+        $(this).attr('rel', rel.trim());
+
+        nextNode.nodeValue = nextText.replace(blankTargetMarker, '');
+    });
+
     $('article img').each(function() {
         var src = $(this).attr('src');
         $(this).wrap('<a href="' + src + '" target="_blank"></a>');
